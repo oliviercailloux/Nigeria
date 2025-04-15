@@ -4,10 +4,6 @@ library(acled.api)
 email_and_api_key <- readLines("ACLED API key.txt")
 email <- email_and_api_key[1]
 api_key <- email_and_api_key[2]
-# url <- "https://api.acleddata.com/acled/read/?key=****************1234&email=you@youremail.com"
-# event_date <- "{2024-01-01|2024-12-31}"
-# event_date_where <- "BETWEEN"
-# country_url <- "https://api.acleddata.com/country/read?key={api_key}&email={email address}"
 data <- acled.api(
   email.address = email, access.key = api_key,
   country = "Nigeria",
