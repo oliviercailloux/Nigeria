@@ -1,6 +1,6 @@
-library(conflicted)
-library(tidyverse)
-library(acled.api)
+library("conflicted")
+library("tidyverse")
+library("acled.api")
 email_and_api_key <- readLines("ACLED API key.txt")
 email <- email_and_api_key[1]
 api_key <- email_and_api_key[2]

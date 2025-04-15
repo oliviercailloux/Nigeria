@@ -1,7 +1,11 @@
-library(conflicted)
-library(tidyverse)
+library("conflicted")
+library("tidyverse")
 t <- read.csv("ACLED.csv")
 f_by_e <- t |> group_by(event_type) |> summarize(sum(fatalities))
 nb_f <- sum(t$fatalities)
 stopifnot(nb_f == sum(f_by_e[2]))
 f_by_i <- t |> group_by(interaction) |> summarize(sum(fatalities))
+
+library("fredr")
+api_key <- readLines("FRED API key.txt")
+fredr_set_key(api_key)
