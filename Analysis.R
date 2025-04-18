@@ -32,20 +32,17 @@ by_year <- by_year |>
 for (i in 1:5) {
   lm_formula = as.formula(glue("delta_log_gdp ~ log_nb_events_y_minus_{i} + log_nb_fatalities_y_minus_{i} + infl + fdi + trade + military_exp + export"))
   model <- lm(lm_formula, by_year)
-  # summary(model)
-  stargazer(model, type = "latex", title = "GDP growth rate model", dep.var.labels = c("GDP growth rate"), covariate.labels = c(glue("log nb events ({i} years lag)"), glue("log nb fatalities ({i} years lag)"), "inflation", "fdi", "trade", "military exp.", "export"), out = glue("../LaTeX/gdp_model_both_{i}.tex"))
+  stargazer(model, type = "latex", title = "GDP growth rate model", out = glue("../LaTeX/Generated/gdp_model_both_{i}.tex"))
 }
 for (i in 1:5) {
   lm_formula = as.formula(glue("delta_log_gdp ~ log_nb_events_y_minus_{i} + infl + fdi + trade + military_exp + export"))
   model <- lm(lm_formula, by_year)
-  # summary(model)
-  stargazer(model, type = "latex", title = "GDP growth rate model", dep.var.labels = c("GDP growth rate"), covariate.labels = c(glue("log nb events ({i} years lag)"), glue("log nb fatalities ({i} years lag)"), "inflation", "fdi", "trade", "military exp.", "export"), out = glue("../LaTeX/gdp_model_events_{i}.tex"))
+  stargazer(model, type = "latex", title = "GDP growth rate model", out = glue("../LaTeX/Generated/gdp_model_events_{i}.tex"))
 }
 for (i in 1:5) {
   lm_formula = as.formula(glue("delta_log_gdp ~ log_nb_fatalities_y_minus_{i} + infl + fdi + trade + military_exp + export"))
   model <- lm(lm_formula, by_year)
-  # summary(model)
-  stargazer(model, type = "latex", title = "GDP growth rate model fats", dep.var.labels = c("GDP growth rate"), out = glue("../LaTeX/gdp_model_fats_{i}.tex"))
+  stargazer(model, type = "latex", title = "GDP growth rate model fats", dep.var.labels = c("GDP growth rate"), out = glue("../LaTeX/Generated/gdp_model_fats_{i}.tex"))
 }
 # delta_log_gdp = log gdp year y2 - log gdp year y1 = log(gdp year y2 / gdp year y1)
 # delta_log_gdp = a + b1 * nb_events_y + b2 * nb_fatalities_y means that
@@ -62,4 +59,3 @@ for (i in 1:5) {
 #   group_by(interaction) |>
 #   summarize(sum(fatalities))
 
-delta_gdp <- na.omit(diff(log(gdp$value), lag = 1)) # GDP growth rate
