@@ -2,6 +2,7 @@ setwd("Code")
 library("conflicted")
 library("glue")
 library("tidyverse")
+library("stargazer")
 conflict_prefer("lag", "dplyr")
 acled_raw <- as_tibble(read.csv("ACLED.csv"))
 acled <- acled_raw |> mutate(year = year(event_date))
@@ -11,7 +12,7 @@ y_events <- acled |>
   mutate(log_nb_events_y = log(nb_events_y), log_nb_fatalities_y = log(nb_fatalities_y))
 stopifnot(sum(acled$fatalities) == sum(y_events$nb_fatalities_y))
 by_year <- y_events
-for (i in 1:3) {
+for (i in 1:5) {
   by_year <- by_year |>
     mutate(
       "log_nb_events_y_minus_{i}" := lag(log_nb_events_y, i),
@@ -28,8 +29,24 @@ wb_ext <- wb |> mutate(delta_log_gdp = diffs) |> rename(gdp = NY.GDP.PCAP.KD, in
 by_year <- by_year |>
   inner_join(wb_ext, by = "year")
 
-model <- lm(delta_log_gdp ~ log_nb_events_y + log_nb_fatalities_y + infl + fdi + trade + military_exp + export, by_year)
-summary(model)
+for (i in 1:5) {
+  lm_formula = as.formula(glue("delta_log_gdp ~ log_nb_events_y_minus_{i} + log_nb_fatalities_y_minus_{i} + infl + fdi + trade + military_exp + export"))
+  model <- lm(lm_formula, by_year)
+  # summary(model)
+  stargazer(model, type = "latex", title = "GDP growth rate model", dep.var.labels = c("GDP growth rate"), covariate.labels = c(glue("log nb events ({i} years lag)"), glue("log nb fatalities ({i} years lag)"), "inflation", "fdi", "trade", "military exp.", "export"), out = glue("../LaTeX/gdp_model_both_{i}.tex"))
+}
+for (i in 1:5) {
+  lm_formula = as.formula(glue("delta_log_gdp ~ log_nb_events_y_minus_{i} + infl + fdi + trade + military_exp + export"))
+  model <- lm(lm_formula, by_year)
+  # summary(model)
+  stargazer(model, type = "latex", title = "GDP growth rate model", dep.var.labels = c("GDP growth rate"), covariate.labels = c(glue("log nb events ({i} years lag)"), glue("log nb fatalities ({i} years lag)"), "inflation", "fdi", "trade", "military exp.", "export"), out = glue("../LaTeX/gdp_model_events_{i}.tex"))
+}
+for (i in 1:5) {
+  lm_formula = as.formula(glue("delta_log_gdp ~ log_nb_fatalities_y_minus_{i} + infl + fdi + trade + military_exp + export"))
+  model <- lm(lm_formula, by_year)
+  # summary(model)
+  stargazer(model, type = "latex", title = "GDP growth rate model fats", dep.var.labels = c("GDP growth rate"), out = glue("../LaTeX/gdp_model_fats_{i}.tex"))
+}
 # delta_log_gdp = log gdp year y2 - log gdp year y1 = log(gdp year y2 / gdp year y1)
 # delta_log_gdp = a + b1 * nb_events_y + b2 * nb_fatalities_y means that
 # gdp year y2 = gdp year y1 * e^(a + b1 * nb_events_y + b2 * nb_fatalities_y)
