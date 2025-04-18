@@ -12,6 +12,10 @@ gdp_descr$units_short
 gdp_descr$notes
 gdp <- fredr("MKTGDPNGA646NWDB")
 rgdp_descr <- fredr_series_search_id("RGDPNANGA666NRUG")
+rgdp_descr <- fredr_series_search_id("NYGDPDEFLKDN")
+# WB: NY.GDP.PCAP.KD. FRED: https://fred.stlouisfed.org/series/NYGDPPCAPKDNGA
+# WB: NY.GDP.DEFL.KD.ZG.AD
+
 # Net Lending (+) / Net Borrowing (-) (balance from Financial Account) as Direct Investment for Nigeria https://fred.stlouisfed.org/series/NGABFDBP6GDPPT
 Capital Importation https://microdata.nigerianstat.gov.ng/index.php/catalog/143/related-materials
 # Share of Gross Capital Formation at Current Purchasing Power Parities for Nigeria (CSHICPNGA156NRUG)
