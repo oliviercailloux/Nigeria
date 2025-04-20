@@ -24,51 +24,59 @@ wb <- as_tibble(read.csv("WB year.csv")) |> rename(year = Year)
 wb_descr <- as_tibble(read.csv("WB descr.csv"))
 log_gdp <- log(wb$NY.GDP.PCAP.KD)
 diffs <- c(NA, diff(log_gdp, lag = 1))
-wb_ext <- wb |> mutate(delta_log_gdp = diffs) |> rename(gdp = NY.GDP.PCAP.KD, infl = NY.GDP.DEFL.KD.ZG.AD, fdi = BM.KLT.DINV.WD.GD.ZS, trade = TG.VAL.TOTL.GD.ZS, military_exp = MS.MIL.XPND.ZS, export = TX.VAL.MRCH.XD.WD)
+wb_ext <- wb |>
+  mutate(delta_log_gdp = diffs) |>
+  rename(gdp = NY.GDP.PCAP.KD, infl = NY.GDP.DEFL.KD.ZG.AD, fdi = BM.KLT.DINV.WD.GD.ZS, trade = TG.VAL.TOTL.GD.ZS, military_exp = MS.MIL.XPND.ZS, export = TX.VAL.MRCH.XD.WD)
 
 by_year <- by_year |>
   inner_join(wb_ext, by = "year")
 
+models <- list()
 for (i in 1:5) {
-  lm_formula = as.formula(glue("delta_log_gdp ~ log_nb_events_y_minus_{i} + log_nb_fatalities_y_minus_{i} + infl + fdi + trade + military_exp + export"))
+  lm_formula <- as.formula(glue("delta_log_gdp ~ log_nb_events_y_minus_{i} + log_nb_fatalities_y_minus_{i} + infl + fdi + trade + military_exp + export"))
   model <- lm(lm_formula, by_year)
+  models[[i]] <- model
   # print(summary(model))
   # , report=('vc*p')
   stargazer(model, type = "latex", title = "GDP growth rate model", out = glue("../LaTeX/Generated/gdp_model_both_{i}.tex"))
 }
+ps <- list()
 for (i in 1:5) {
-  lm_formula = as.formula(glue("delta_log_gdp ~ log_nb_events_y_minus_{i} + infl + fdi + trade + military_exp + export"))
+  m <- models[[i]]
+  cs <- summary(m)$coefficients
+  t <- as_tibble(cs, rownames = NA) |> rownames_to_column("variable")
+  pvalues <- t |> select(c("variable", `Pr(>|t|)`))
+  l <- split(pvalues[["Pr(>|t|)"]], pvalues$variable)
+  ps[[i]] <- l[[glue("log_nb_events_y_minus_{i}")]]
+}
+ps
+for (i in 1:5) {
+  lm_formula <- as.formula(glue("delta_log_gdp ~ log_nb_events_y_minus_{i} + infl + fdi + trade + military_exp + export"))
   model <- lm(lm_formula, by_year)
   stargazer(model, type = "latex", title = "GDP growth rate model", out = glue("../LaTeX/Generated/gdp_model_events_{i}.tex"))
 }
 for (i in 1:5) {
-  lm_formula = as.formula(glue("delta_log_gdp ~ log_nb_fatalities_y_minus_{i} + infl + fdi + trade + military_exp + export"))
+  lm_formula <- as.formula(glue("delta_log_gdp ~ log_nb_fatalities_y_minus_{i} + infl + fdi + trade + military_exp + export"))
   model <- lm(lm_formula, by_year)
   stargazer(model, type = "latex", title = "GDP growth rate model fats", dep.var.labels = c("GDP growth rate"), out = glue("../LaTeX/Generated/gdp_model_fats_{i}.tex"))
 }
 
 model <- lm(delta_log_gdp ~ log_nb_events_y_minus_3 + log_nb_fatalities_y_minus_3 + infl + trade + military_exp + export, by_year)
-print(summary(model))
 stargazer(model, type = "latex", title = "GDP growth rate model", out = glue("../LaTeX/Generated/gdp_model_vfitme.tex"))
 
 model <- lm(delta_log_gdp ~ log_nb_events_y_minus_3 + log_nb_fatalities_y_minus_3 + infl + trade + military_exp, by_year)
-print(summary(model))
 stargazer(model, type = "latex", title = "GDP growth rate model", out = glue("../LaTeX/Generated/gdp_model_vfitm.tex"))
 
 model <- lm(delta_log_gdp ~ log_nb_events_y_minus_3 + log_nb_fatalities_y_minus_3 + infl + military_exp, by_year)
-print(summary(model))
 stargazer(model, type = "latex", title = "GDP growth rate model", out = glue("../LaTeX/Generated/gdp_model_vfim.tex"))
 
 model <- lm(delta_log_gdp ~ log_nb_events_y_minus_3 + infl + military_exp, by_year)
-print(summary(model))
 stargazer(model, type = "latex", title = "GDP growth rate model", out = glue("../LaTeX/Generated/gdp_model_vim.tex"))
 
 model <- lm(delta_log_gdp ~ log_nb_events_y_minus_3 + military_exp, by_year)
-print(summary(model))
 stargazer(model, type = "latex", title = "GDP growth rate model", out = glue("../LaTeX/Generated/gdp_model_vm.tex"))
 
 model <- lm(delta_log_gdp ~ log_nb_events_y_minus_3, by_year)
-print(summary(model))
 stargazer(model, type = "latex", title = "GDP growth rate model", out = glue("../LaTeX/Generated/gdp_model_v.tex"))
 
 # stargazer(model, type = "latex", title = "GDP growth rate model", out = glue("../LaTeX/Generated/gdp_model_both_{i}.tex"))
@@ -86,4 +94,3 @@ stargazer(model, type = "latex", title = "GDP growth rate model", out = glue("..
 # f_by_i <- t |>
 #   group_by(interaction) |>
 #   summarize(sum(fatalities))
-
