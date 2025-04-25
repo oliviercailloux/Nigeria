@@ -40,7 +40,6 @@ for (i in 1:5) {
   # , report=('vc*p')
   stargazer(model, type = "latex", title = "GDP growth rate model", out = glue("../LaTeX/Generated/gdp_model_both_{i}.tex"), table.placement = "t", label = glue("tab:both{i}"))
 }
-ps <- list()
 for (i in 1:5) {
   m <- models[[i]]
   cs <- summary(m)$coefficients
@@ -50,6 +49,21 @@ for (i in 1:5) {
   ps[[i]] <- l[[glue("log_nb_events_y_minus_{i}")]]
 }
 ps
+
+m_complete <- models[[3]]
+s <- summary(m_complete)
+r2 <- s$r.squared
+scr_nc <- sum(m_complete$residuals^2)
+a <- anova(m_complete)
+t <- as_tibble(a) |> mutate(variable = row.names(a), .before = "Df")
+stopifnot(t[t[["variable"]] == "Residuals", ] |> pull("Sum Sq") == scr_nc)
+sct <- sum(t[["Sum Sq"]])
+# sum(m$residuals^2) + sum((m$fitted.values - y)^2)
+# stopifnot(sum(t[["Sum Sq"]]) == sct)
+stopifnot(abs(r2 - (sct - scr_nc) / sct) < 0.00001)
+
+ps <- list()
+
 stargazer(models[[3]], type = "latex", title = "GDP growth rate model", out = glue("../LaTeX/Generated/gdp_model_both_3_again.tex"), table.placement = "t", label = glue("tab:both3again"))
 
 for (i in 1:5) {
@@ -96,3 +110,21 @@ stargazer(model, type = "latex", title = "GDP growth rate model", out = glue("..
 # f_by_i <- t |>
 #   group_by(interaction) |>
 #   summarize(sum(fatalities))
+
+m_small <- model
+s <- summary(m_small)
+r2 <- s$r.squared
+scr_c <- sum(m_small$residuals^2)
+a <- anova(m_small)
+t <- as_tibble(a) |> mutate(variable = row.names(a), .before = "Df")
+stopifnot(t[t[["variable"]] == "Residuals", ] |> pull("Sum Sq") == scr_c)
+sct_c <- sum(t[["Sum Sq"]])
+stopifnot(abs(sct_c - sct) < 0.001)
+stopifnot(abs(r2 - (sct_c - scr_c) / sct_c) < 0.00001)
+ddf_tot <- nrow(by_year) - 1
+k_complete <- length(m_complete$coefficients) - 1
+k_small <- length(m_small$coefficients) - 1
+ddf_res_complete <- ddf_tot - k_complete - 1
+q <- k_complete - k_small
+f_stat <- ((scr_c - scr_nc) / q) / (scr_nc / ddf_res_complete)
+pf(f_stat, q, ddf_res_complete)
